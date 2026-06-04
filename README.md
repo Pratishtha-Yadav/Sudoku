@@ -1,17 +1,32 @@
-# sudoku_test
+# Advanced Sudoku 🎮
 
-A new Flutter project.
+A next-generation Sudoku experience built with Flutter.
 
-## Getting Started
+## Features
+- Multiple Difficulty Levels
+- Intelligent Sudoku Generator
+- Hint System
+- Timer & Statistics
+- Daily Challenges
+- Achievements & Rewards
+- Global Leaderboards
+- Player Analytics Dashboard
+- Modern Neon Gaming UI
 
-This project is a starting point for a Flutter application.
+## Tech Stack
+- Flutter
+- Dart
+- Material 3
 
-A few resources to get you started if this is your first Flutter project:
+## Status
+🚧 Currently under active development.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Roadmap
+- [ ] Dashboard UI
+- [ ] Sudoku Engine
+- [ ] Difficulty Modes
+- [ ] Achievement System
+- [ ] Leaderboards
+- [ ] Analytics Dashboard
+- [ ] Daily Challenges
+- [ ] Deployment
