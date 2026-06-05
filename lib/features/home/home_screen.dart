@@ -1,12 +1,73 @@
 import 'package:flutter/material.dart';
+import '../sudoku/difficulty_screen.dart';
+import '../../models/dashboard_stats_model.dart';
+import '../../services/dashboard_service.dart';
 
-class HomeScreen extends StatelessWidget {
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+    final DashboardService _dashboardService =
+      DashboardService();
+
+  DashboardStatsModel? stats;
+
+  @override
+  void initState() {
+    super.initState();
+    loadDashboard();
+  }
+
+  Future<void> loadDashboard() async {
+    final data =
+        await _dashboardService.getDashboardStats();
+
+    setState(() {
+      stats = data;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (stats == null) {
+  return const Scaffold(
+    body: Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+}
+
+
+
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
+
+  bottomNavigationBar: Container(
+    height: 75,
+    decoration: const BoxDecoration(
+      color: Color(0xFF15152B),
+      border: Border(
+        top: BorderSide(
+          color: Color(0xFF26264A),
+        ),
+      ),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: const [
+        Icon(Icons.home, color: Color(0xFF6C3BFF)),
+        Icon(Icons.bar_chart, color: Colors.white54),
+        Icon(Icons.grid_view, color: Colors.white54),
+        Icon(Icons.emoji_events, color: Colors.white54),
+        Icon(Icons.person, color: Colors.white54),
+      ],
+    ),
+  ),
 
       body: SafeArea(
         child: SingleChildScrollView(
@@ -99,13 +160,13 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Column(
                       children: [
                         Text(
-                          "7",
+                          "${stats!.currentStreak}",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -122,7 +183,7 @@ class HomeScreen extends StatelessWidget {
                     Column(
                       children: [
                         Text(
-                          "21",
+                          "${stats!.bestStreak}",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -139,7 +200,7 @@ class HomeScreen extends StatelessWidget {
                     Column(
                       children: [
                         Text(
-                          "2450",
+                          "${stats!.xp}",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -237,50 +298,65 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 15),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: _difficultyButton(
-                      "Easy",
-                      const Color(0xFF4CAF50),
-                    ),
-                  ),
+                GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DifficultyScreen(),
+      ),
+    );
+  },
+  child: Container(
+    width: double.infinity,
+    height: 90,
 
-                  const SizedBox(width: 10),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(22),
 
-                  Expanded(
-                    child: _difficultyButton(
-                      "Medium",
-                      const Color(0xFFFF9800),
-                    ),
-                  ),
-                ],
-              ),
+      gradient: const LinearGradient(
+        colors: [
+          Color(0xFF6C3BFF),
+          Color(0xFF2D8CFF),
+        ],
+      ),
 
-              const SizedBox(height: 10),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF6C3BFF).withOpacity(0.4),
+          blurRadius: 20,
+          spreadRadius: 2,
+        ),
+      ],
+    ),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: _difficultyButton(
-                      "Hard",
-                      const Color(0xFFF44336),
-                    ),
-                  ),
+    child: const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
 
-                  const SizedBox(width: 10),
+        Icon(
+          Icons.play_arrow_rounded,
+          color: Colors.white,
+          size: 36,
+        ),
 
-                  Expanded(
-                    child: _difficultyButton(
-                      "Expert",
-                      const Color(0xFF9C27B0),
-                    ),
-                  ),
-                ],
-              ),
+        SizedBox(width: 10),
 
-              const SizedBox(height: 25),
+        Text(
+          "START NEW GAME",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
+        ),
+      ],
+    ),
+  ),
+),
 
+              
               // DAILY CHALLENGE
               const Text(
                 "Daily Challenge",
@@ -347,12 +423,21 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
   Widget _difficultyButton(
-    String title,
-    Color color,
-  ) {
-    return Container(
+  BuildContext context,
+  String title,
+  Color color,
+) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const DifficultyScreen(),
+        ),
+      );
+    },
+    child: Container(
       height: 70,
       decoration: BoxDecoration(
         color: color.withOpacity(0.18),
@@ -371,6 +456,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
