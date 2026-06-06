@@ -69,7 +69,7 @@ class DifficultyScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const GameScreen(),
+        builder: (_) => GameScreen(difficulty: title),
       ),
     );
   },
