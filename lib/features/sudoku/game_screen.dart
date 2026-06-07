@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sudoku_test/models/sudoku_cell_model.dart';
-import '../../services/sudoku_generator.dart';
+
+import 'dart:async';
+import '../../services/sudoku_engine.dart';
+
 
 class GameScreen extends StatefulWidget {
   final String difficulty;
@@ -17,17 +20,85 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   int selectedRow = -1;
   int selectedCol = -1;
+  
+  
 
   List<SudokuCellModel> board = [];
+  final SudokuEngine engine = SudokuEngine();
+  late List<List<int>> solutionBoard;
+  Timer? timer;
+  int secondsElapsed = 0;
+  int mistakes = 0;
+  bool isPaused = false;
+
+
+  void togglePause() {
+  if (isPaused) {
+    startTimer();
+  } else {
+    timer?.cancel();
+  }
+
+  setState(() {
+    isPaused = !isPaused;
+  });
+}
 
   @override
 void initState() {
   super.initState();
   loadPuzzle();
+  startTimer();
+}
+
+void startTimer() {
+  timer = Timer.periodic(
+    const Duration(seconds: 1),
+    (_) {
+      setState(() {
+        secondsElapsed++;
+      });
+    },
+  );
+}
+
+String get formattedTime {
+  final minutes = secondsElapsed ~/ 60;
+  final seconds = secondsElapsed % 60;
+
+  return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
 }
 
 void loadPuzzle() {
-  final puzzle = SudokuGenerator.getMediumPuzzle();
+  solutionBoard = engine.generateSolvedBoard();
+
+  List<List<int>> puzzle =
+      solutionBoard.map((row) => List<int>.from(row)).toList();
+
+  int cellsToRemove;
+
+  switch (widget.difficulty.toLowerCase()) {
+    case 'easy':
+      cellsToRemove = 35;
+      break;
+
+    case 'medium':
+      cellsToRemove = 45;
+      break;
+
+    case 'hard':
+      cellsToRemove = 55;
+      break;
+
+    case 'expert':
+      cellsToRemove = 60;
+      break;
+
+    default:
+      cellsToRemove = 45;
+  }
+
+  engine.removeCells(puzzle, cellsToRemove);
 
   board.clear();
 
@@ -41,6 +112,15 @@ void loadPuzzle() {
       );
     }
   }
+}
+
+
+
+
+@override
+void dispose() {
+  timer?.cancel();
+  super.dispose();
 }
   @override
   Widget build(BuildContext context) {
@@ -63,24 +143,41 @@ void loadPuzzle() {
           children: [
 
             // Timer Row
-            const Row(
+             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "0:00",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                ),
+                Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Text(
+      formattedTime,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+      ),
+    ),
+    Text(
+      "Mistakes: $mistakes/3",
+      style: const TextStyle(
+        color: Colors.redAccent,
+        fontSize: 12,
+      ),
+    ),
+  ],
+),
 
                 Row(
                   children: [
-                    Icon(Icons.lightbulb_outline,
-                        color: Colors.white),
-                    SizedBox(width: 12),
-                    Icon(Icons.pause,
-                        color: Colors.white),
+                    GestureDetector(
+  onTap: togglePause,
+  child: Icon(
+    isPaused
+        ? Icons.play_arrow
+        : Icons.pause,
+    color: Colors.white,
+  ),
+),
+                    
                   ],
                 )
               ],
@@ -168,6 +265,58 @@ Expanded(
 ),
             const SizedBox(height: 10),
 
+          const SizedBox(height: 12),
+
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  children: [
+
+    IconButton(
+      onPressed: () {},
+      icon: const Icon(
+        Icons.undo,
+        color: Colors.white,
+      ),
+    ),
+
+    IconButton(
+      onPressed: () {
+        if (selectedRow == -1 || selectedCol == -1) {
+          return;
+        }
+
+        final cellIndex =
+            selectedRow * 9 + selectedCol;
+
+        if (!board[cellIndex].isFixed) {
+          setState(() {
+            board[cellIndex].value = 0;
+          });
+        }
+      },
+      icon: const Icon(
+        Icons.backspace_outlined,
+        color: Colors.white,
+      ),
+    ),
+
+    IconButton(
+      onPressed: () {},
+      icon: const Icon(
+        Icons.edit_note,
+        color: Colors.white,
+      ),
+    ),
+    IconButton(
+  onPressed: togglePause,
+  icon: Icon(
+    isPaused ? Icons.play_arrow : Icons.pause,
+    color: Colors.white,
+  ),
+),
+  ],
+),  
+
            // Number Pad
 SizedBox(
   height: 60,
@@ -177,16 +326,48 @@ SizedBox(
       (index) => Expanded(
   child: GestureDetector(
     onTap: () {
-      if (selectedRow == -1 || selectedCol == -1) return;
+  if (selectedRow == -1 || selectedCol == -1) return;
 
-      final cellIndex = selectedRow * 9 + selectedCol;
+  final cellIndex = selectedRow * 9 + selectedCol;
 
-      if (!board[cellIndex].isFixed) {
-        setState(() {
-          board[cellIndex].value = index + 1;
-        });
+  if (!board[cellIndex].isFixed) {
+    final correctValue =
+        solutionBoard[selectedRow][selectedCol];
+
+    final enteredValue = index + 1;
+
+    setState(() {
+      if (enteredValue == correctValue) {
+        board[cellIndex].value = enteredValue;
+      } else {
+        mistakes++;
+
+if (mistakes >= 3) {
+  timer?.cancel();
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      title: const Text("Game Over"),
+      content: const Text("You reached 3 mistakes."),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            Navigator.pop(context);
+          },
+          child: const Text("Back"),
+        ),
+      ],
+    ),
+  );
+}
       }
-    },
+    });
+  }
+},
+
     child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 2),
           decoration: BoxDecoration(
