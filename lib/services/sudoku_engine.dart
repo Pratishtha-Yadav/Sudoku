@@ -1,12 +1,17 @@
 import 'dart:math';
+import '../models/sudoku_game.dart';
 
 class SudokuEngine {
   static const int size = 9;
 
+SudokuGame generateGame(String difficulty) {
+  List<List<int>> solution = generateSolvedBoard();
 
 
-  List<List<int>> generatePuzzle(String difficulty) {
-  List<List<int>> puzzle = generateSolvedBoard();
+
+
+  List<List<int>> puzzle =
+      solution.map((row) => List<int>.from(row)).toList();
 
   int cellsToRemove;
 
@@ -33,9 +38,17 @@ class SudokuEngine {
 
   removeCells(puzzle, cellsToRemove);
 
-  return puzzle;
-}
+  return SudokuGame(
+    puzzle: puzzle,
+    solution: solution,
+  );
+}  
 
+
+
+List<List<int>> generatePuzzle(String difficulty) {
+  return generateGame(difficulty).puzzle;
+}
   List<List<int>> generateSolvedBoard() {
     List<List<int>> board =
         List.generate(size, (_) => List.filled(size, 0));
@@ -61,6 +74,8 @@ class SudokuEngine {
     }
   }
 }
+
+
 
   bool fillBoard(List<List<int>> board) {
     for (int row = 0; row < size; row++) {
@@ -101,6 +116,31 @@ class SudokuEngine {
       if (board[row][i] == number) return false;
       if (board[i][col] == number) return false;
     }
+
+
+    bool isCorrectMove(
+  List<List<int>> solution,
+  int row,
+  int col,
+  int value,
+) {
+  return solution[row][col] == value;
+}
+
+bool isPuzzleSolved(
+  List<List<int>> board,
+  List<List<int>> solution,
+) {
+  for (int row = 0; row < 9; row++) {
+    for (int col = 0; col < 9; col++) {
+      if (board[row][col] != solution[row][col]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
 
     int startRow = row - row % 3;
     int startCol = col - col % 3;

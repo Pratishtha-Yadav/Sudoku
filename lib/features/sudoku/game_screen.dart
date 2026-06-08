@@ -28,7 +28,7 @@ class _GameScreenState extends State<GameScreen> {
   late List<List<int>> solutionBoard;
   Timer? timer;
   int secondsElapsed = 0;
-  int mistakes = 0;
+  
   bool isPaused = false;
 
 
@@ -105,11 +105,13 @@ void loadPuzzle() {
   for (int row = 0; row < 9; row++) {
     for (int col = 0; col < 9; col++) {
       board.add(
-        SudokuCellModel(
-          value: puzzle[row][col],
-          isFixed: puzzle[row][col] != 0,
-        ),
-      );
+  SudokuCellModel(
+    value: puzzle[row][col],
+    isFixed: puzzle[row][col] != 0,
+    isCorrect: false,
+    isWrong: false,
+  ),
+);;
     }
   }
 }
@@ -121,7 +123,46 @@ void loadPuzzle() {
 void dispose() {
   timer?.cancel();
   super.dispose();
+
 }
+
+
+void checkWin() {
+  for (int row = 0; row < 9; row++) {
+    for (int col = 0; col < 9; col++) {
+      final index = row * 9 + col;
+
+      if (board[index].value !=
+          solutionBoard[row][col]) {
+        return;
+      }
+    }
+  }
+
+  timer?.cancel();
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      title: const Text("🏆 Puzzle Complete"),
+      content: Text(
+        "Time: $formattedTime",
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            Navigator.pop(context);
+          },
+          child: const Text("Back"),
+        ),
+      ],
+    ),
+  );
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,13 +197,7 @@ void dispose() {
         fontSize: 20,
       ),
     ),
-    Text(
-      "Mistakes: $mistakes/3",
-      style: const TextStyle(
-        color: Colors.redAccent,
-        fontSize: 12,
-      ),
-    ),
+   
   ],
 ),
 
@@ -218,10 +253,14 @@ Expanded(
   child: Container(
               margin: const EdgeInsets.all(1),
               decoration: BoxDecoration(
-  color: (selectedRow == index ~/ 9 &&
-          selectedCol == index % 9)
-      ? const Color(0xFFFFD54F)
-      : Colors.white,
+  color: board[index].isWrong
+      ? Colors.red.shade300
+      : board[index].isCorrect
+          ? Colors.green.shade300
+          : (selectedRow == row &&
+                  selectedCol == col)
+              ? const Color(0xFFFFD54F)
+              : Colors.white,
                 border: Border(
   top: BorderSide(
     color: Colors.black,
@@ -250,8 +289,8 @@ Expanded(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: board[index].isFixed
-                        ? Colors.black
-                        : Colors.blue,
+                  ? Colors.black
+                  : Colors.blue.shade700,
                   ),
                 ),
               ),
@@ -337,36 +376,23 @@ SizedBox(
     final enteredValue = index + 1;
 
     setState(() {
-      if (enteredValue == correctValue) {
-        board[cellIndex].value = enteredValue;
-      } else {
-        mistakes++;
+  board[cellIndex].value = enteredValue;
 
-if (mistakes >= 3) {
-  timer?.cancel();
+  final correctValue =
+      solutionBoard[selectedRow][selectedCol];
 
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => AlertDialog(
-      title: const Text("Game Over"),
-      content: const Text("You reached 3 mistakes."),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-            Navigator.pop(context);
-          },
-          child: const Text("Back"),
-        ),
-      ],
-    ),
-  );
-}
-      }
-    });
-  }
-},
+  board[cellIndex].isCorrect =
+      enteredValue == correctValue;
+
+  board[cellIndex].isWrong =
+      enteredValue != correctValue;
+      board[cellIndex].value = correctValue;
+      
+});
+checkWin();
+
+  } },
+
 
     child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -394,6 +420,6 @@ if (mistakes >= 3) {
           ],
         ),
       ),
-    );
+    );  
   }
-}
+}     
