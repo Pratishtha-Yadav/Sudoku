@@ -3,7 +3,7 @@ import 'package:sudoku_test/models/sudoku_cell_model.dart';
 
 import 'dart:async';
 import '../../services/sudoku_engine.dart';
-
+import 'package:sudoku_test/models/move.dart';
 
 class GameScreen extends StatefulWidget {
   final String difficulty;
@@ -24,12 +24,15 @@ class _GameScreenState extends State<GameScreen> {
   
 
   List<SudokuCellModel> board = [];
+
   final SudokuEngine engine = SudokuEngine();
   late List<List<int>> solutionBoard;
   Timer? timer;
   int secondsElapsed = 0;
   
   bool isPaused = false;
+
+  List<Move> moveHistory = [];
 
 
   void togglePause() {
@@ -241,46 +244,65 @@ Expanded(
             final row = index ~/ 9;
             final col = index % 9;
 
+                    bool isSelected =
+            selectedRow == row &&
+            selectedCol == col;
+
+        bool isSameRow =
+            selectedRow == row;
+
+        bool isSameCol =
+            selectedCol == col;
+
             return GestureDetector(
-            onTap: () {
-            setState(() {
-              selectedRow = index ~/ 9;
-              selectedCol = index % 9;
-                  }
-                  );
-              },
+  onTap: () {
+    setState(() {
+      selectedRow = row;
+      selectedCol = col;
+    });
+  },
 
   child: Container(
-              margin: const EdgeInsets.all(1),
-              decoration: BoxDecoration(
-  color: board[index].isWrong
-      ? Colors.red.shade300
-      : board[index].isCorrect
-          ? Colors.green.shade300
-          : (selectedRow == row &&
-                  selectedCol == col)
-              ? const Color(0xFFFFD54F)
+    margin: const EdgeInsets.all(1),
+
+    decoration: BoxDecoration(
+      color: isSelected
+          ? const Color.fromARGB(255, 171, 171, 244)
+          : (isSameRow || isSameCol)
+              ? const Color(0xFFEDE7F6)
               : Colors.white,
-                border: Border(
-  top: BorderSide(
-    color: Colors.black,
-    width: row % 3 == 0 ? 2 : 0.5,
-  ),
-  left: BorderSide(
-    color: Colors.black,
-    width: col % 3 == 0 ? 2 : 0.5,
-  ),
-  right: BorderSide(
-    color: Colors.black,
-    width: col == 8 ? 2 : 0.5,
-  ),
-  bottom: BorderSide(
-    color: Colors.black,
-    width: row == 8 ? 2 : 0.5,
-  ),
-),
+
+      boxShadow: isSelected
+          ? [
+              BoxShadow(
+                color: Colors.deepPurple.withOpacity(0.6),
+                blurRadius: 12,
+                spreadRadius: 2,
               ),
-              child: Center(
+            ]
+          : [],
+
+      border: Border(
+        top: BorderSide(
+          color: Colors.black,
+          width: row % 3 == 0 ? 2 : 0.5,
+        ),
+        left: BorderSide(
+          color: Colors.black,
+          width: col % 3 == 0 ? 2 : 0.5,
+        ),
+        right: BorderSide(
+          color: Colors.black,
+          width: col == 8 ? 2 : 0.5,
+        ),
+        bottom: BorderSide(
+          color: Colors.black,
+          width: row == 8 ? 2 : 0.5,
+        ),
+      ),
+    ),
+
+    child: Center(
                 child: Text(
                   board[index].value == 0
                       ? ""
@@ -288,30 +310,48 @@ Expanded(
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: board[index].isFixed
-                  ? Colors.black
-                  : Colors.blue.shade700,
+                   color: board[index].isFixed
+    ? const Color.fromARGB(255, 132, 89, 242)
+    : board[index].isWrong
+        ? Colors.red
+        : board[index].isCorrect
+            ? Colors.green
+            : const Color(0xFF2196F3),
                   ),
                 ),
               ),
             ),
-            );
-          },
-        ),
+          );
+        },// itemBuilder
+      ),
       ),
     ),
   ),
 ),
-            const SizedBox(height: 10),
+  
 
-          const SizedBox(height: 12),
+        const SizedBox(height: 10),
+
+        const SizedBox(height: 12),
 
 Row(
   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
   children: [
 
     IconButton(
-      onPressed: () {},
+      onPressed: () {
+  if (moveHistory.isEmpty) return;
+
+  final lastMove = moveHistory.removeLast();
+
+  setState(() {
+    board[lastMove.index].value =
+        lastMove.previousValue;
+
+    board[lastMove.index].isCorrect = false;
+    board[lastMove.index].isWrong = false;
+  });
+},
       icon: const Icon(
         Icons.undo,
         color: Colors.white,
@@ -339,13 +379,13 @@ Row(
       ),
     ),
 
-    IconButton(
-      onPressed: () {},
-      icon: const Icon(
-        Icons.edit_note,
-        color: Colors.white,
-      ),
-    ),
+      IconButton(
+  onPressed: () {},
+  icon: const Icon(
+    Icons.edit_note,
+    color: Colors.white,
+  ),
+),
     IconButton(
   onPressed: togglePause,
   icon: Icon(
@@ -376,6 +416,13 @@ SizedBox(
     final enteredValue = index + 1;
 
     setState(() {
+
+      moveHistory.add(
+  Move(
+    index: cellIndex,
+    previousValue: board[cellIndex].value,
+  ),
+);
   board[cellIndex].value = enteredValue;
 
   final correctValue =
@@ -386,8 +433,8 @@ SizedBox(
 
   board[cellIndex].isWrong =
       enteredValue != correctValue;
-      board[cellIndex].value = correctValue;
       
+      board[cellIndex].value = enteredValue;
 });
 checkWin();
 
@@ -397,9 +444,16 @@ checkWin();
     child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 2),
           decoration: BoxDecoration(
-            color: const Color(0xFF15152B),
-            borderRadius: BorderRadius.circular(10),
-          ),
+  color: const Color(0xFF1A1A35),
+  borderRadius: BorderRadius.circular(20),
+  boxShadow: [
+    BoxShadow(
+      color: const Color.fromARGB(255, 129, 104, 173).withOpacity(0.35),
+      blurRadius: 20,
+      spreadRadius: 2,
+    ),
+  ],
+),
           child: Center(
             child: Text(
               "${index + 1}",
