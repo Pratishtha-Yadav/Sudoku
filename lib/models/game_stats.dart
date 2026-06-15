@@ -1,9 +1,16 @@
 class GameStats {
-  final String difficulty;
-  final int completionTime;
+  int gamesPlayed;
+  int gamesWon;
+  int bestTime;
 
   GameStats({
-    required this.difficulty,
-    required this.completionTime,
+    this.gamesPlayed = 0,
+    this.gamesWon = 0,
+    this.bestTime = 0,
   });
+
+  double get winRate {
+    if (gamesPlayed == 0) return 0;
+    return (gamesWon / gamesPlayed) * 100;
+  }
 }

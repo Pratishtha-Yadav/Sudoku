@@ -1,18 +1,23 @@
-class GameStatsService {
-  int gamesPlayed = 0;
-  int gamesWon = 0;
+import '../models/game_stats.dart';
 
-  void recordWin() {
-    gamesPlayed++;
-    gamesWon++;
+class GameStatsService {
+  final GameStats stats = GameStats();
+
+  void recordWin(int completionTime) {
+    stats.gamesPlayed++;
+    stats.gamesWon++;
+
+    if (stats.bestTime == 0 ||
+        completionTime < stats.bestTime) {
+      stats.bestTime = completionTime;
+    }
   }
 
   void recordLoss() {
-    gamesPlayed++;
+    stats.gamesPlayed++;
   }
 
-  double get winRate {
-    if (gamesPlayed == 0) return 0;
-    return (gamesWon / gamesPlayed) * 100;
+  GameStats getStats() {
+    return stats;
   }
 }
