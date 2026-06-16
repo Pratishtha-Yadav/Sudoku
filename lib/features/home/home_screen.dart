@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../sudoku/difficulty_screen.dart';
 import '../../models/dashboard_stats_model.dart';
 import '../../services/dashboard_service.dart';
+import 'package:sudoku_test/features/stats/stats_screen.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -368,6 +369,41 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               const SizedBox(height: 15),
+
+GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const StatsScreen(),
+      ),
+    );
+  },
+
+  child: Container(
+    width: double.infinity,
+    height: 90,
+
+    decoration: BoxDecoration(
+      color: const Color(0xFF1A1A35),
+      borderRadius: BorderRadius.circular(22),
+    ),
+
+    child: const Center(
+      child: Text(
+        "📊 Statistics",
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  ),
+),    
+
+const SizedBox(height: 15),
+
 
               Container(
                 padding: const EdgeInsets.all(18),

@@ -4,6 +4,7 @@ import 'package:sudoku_test/models/sudoku_cell_model.dart';
 import 'dart:async';
 import '../../services/sudoku_engine.dart';
 import 'package:sudoku_test/models/move.dart';
+import '../../models/move.dart';
 
 class GameScreen extends StatefulWidget {
   final String difficulty;
@@ -25,6 +26,8 @@ class _GameScreenState extends State<GameScreen> {
 
   List<SudokuCellModel> board = [];
 
+  List<Move> moveHistory = [];
+
   final SudokuEngine engine = SudokuEngine();
   late List<List<int>> solutionBoard;
   Timer? timer;
@@ -32,7 +35,7 @@ class _GameScreenState extends State<GameScreen> {
   
   bool isPaused = false;
 
-  List<Move> moveHistory = [];
+  
 
 
   void togglePause() {
@@ -369,8 +372,19 @@ Row(
 
         if (!board[cellIndex].isFixed) {
           setState(() {
-            board[cellIndex].value = 0;
-          });
+
+  moveHistory.add(
+    Move(
+      index: cellIndex,
+      previousValue: board[cellIndex].value,
+    ),
+  );
+
+  board[cellIndex].value = 0;
+
+  board[cellIndex].isCorrect = false;
+  board[cellIndex].isWrong = false;
+});
         }
       },
       icon: const Icon(
@@ -433,6 +447,14 @@ SizedBox(
 
   board[cellIndex].isWrong =
       enteredValue != correctValue;
+
+  moveHistory.add(
+  Move(
+    index: cellIndex,
+    previousValue: board[cellIndex].value,
+  ),
+);
+    
       
       board[cellIndex].value = enteredValue;
 });
